@@ -1,0 +1,9 @@
+transformers
+torch
+torchvision
+catboost
+fastapi
+uvicorn
+shap
+pydantic
+python-dotenv
