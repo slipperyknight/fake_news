@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fake News Detection</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #000000;
+            color: #ffffff;
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .container { width: 100%; max-width: 600px; }
+        .header { text-align: center; margin-bottom: 40px; }
+        .title { font-size: 32px; font-weight: 300; margin-bottom: 8px; color: #ffffff; }
+        .subtitle { font-size: 16px; color: #aaaaaa; font-weight: 400; }
+        .card {
+            background: #111111;
+            border: 1px solid #333333;
+            border-radius: 12px;
+            padding: 32px;
+            margin-bottom: 24px;
+        }
+        .card-title { font-size: 20px; font-weight: 500; margin-bottom: 24px; color: #ffffff; }
+        .form-group { margin-bottom: 20px; }
+        .label { display: block; font-size: 14px; font-weight: 500; color: #cccccc; margin-bottom: 8px; }
+        .input, .textarea {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid #444444;
+            border-radius: 8px;
+            padding: 12px 16px;
+            font-size: 14px;
+            color: #ffffff;
+            font-family: inherit;
+            transition: all 0.2s ease;
+        }
+        .input:focus, .textarea:focus {
+            outline: none;
+            border-color: #666666;
+            background: rgba(255, 255, 255, 0.08);
+        }
+        .textarea { min-height: 120px; resize: vertical; }
+        .button {
+            width: 100%;
+            background: #ffffff;
+            color: #000000;
+            border: none;
+            border-radius: 8px;
+            padding: 14px 28px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .button:hover { transform: translateY(-1px); box-shadow: 0 8px 25px rgba(255, 255, 255, 0.15); }
+        .button:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #666666;
+            border-radius: 50%;
+            border-top: 2px solid #ffffff;
+            animation: spin 1s linear infinite;
+            margin-right: 8px;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .error-message {
+            background: rgba(220, 38, 38, 0.1);
+            border: 1px solid rgba(220, 38, 38, 0.3);
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-top: 16px;
+            color: #fca5a5;
+            display: none;
+        }
+        .result-card {
+            background: #111111;
+            border: 1px solid #333333;
+            border-radius: 12px;
+            padding: 32px;
+            margin-top: 24px;
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .result-title { font-size: 20px; font-weight: 500; margin-bottom: 24px; color: #ffffff; }
+        .prediction-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #333333;
+            margin-bottom: 20px;
+        }
+        .prediction-label {
+            font-size: 18px;
+            font-weight: 600;
+            padding: 8px 16px;
+            border-radius: 6px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .prediction-label.real { background: rgba(34, 197, 94, 0.2); color: #22c55e; }
+        .prediction-label.fake { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
+        .confidence-score { text-align: right; }
+        .confidence-label { font-size: 14px; color: #aaaaaa; }
+        .confidence-value { font-size: 24px; font-weight: 600; color: #ffffff; display: block; }
+        .contributions-title { font-size: 16px; font-weight: 500; margin-bottom: 16px; color: #ffffff; }
+        .contribution-item { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+        .modality-name { font-size: 14px; color: #aaaaaa; min-width: 80px; }
+        .contribution-bar { flex: 1; height: 8px; background: #222222; border-radius: 4px; overflow: hidden; }
+        .contribution-fill { height: 100%; background: #666666; border-radius: 4px; transition: width 0.3s ease; }
+        .contribution-value { font-size: 14px; font-weight: 600; color: #ffffff; min-width: 50px; text-align: right; }
+        .drift-section { margin-top: 20px; padding-top: 20px; border-top: 1px solid #333333; }
+        .drift-title { font-size: 16px; font-weight: 500; margin-bottom: 12px; color: #ffffff; }
+        .drift-indicator { display: flex; align-items: center; gap: 12px; }
+        .drift-status { display: flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; text-transform: uppercase; }
+        .drift-status.low { background: rgba(34, 197, 94, 0.2); color: #22c55e; }
+        .drift-status.medium { background: rgba(251, 191, 36, 0.2); color: #fbbf24; }
+        .drift-status.high { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
+        .drift-dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+        .drift-value { font-size: 14px; font-weight: 600; color: #ffffff; }
+        .clear-button {
+            background: transparent;
+            color: #666666;
+            border: 1px solid #444444;
+            border-radius: 6px;
+            padding: 8px 16px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-top: 20px;
+        }
+        .clear-button:hover { background: rgba(255, 255, 255, 0.05); border-color: #666666; color: #ffffff; }
+        @media (max-width: 640px) {
+            .title { font-size: 28px; }
+            .prediction-section { flex-direction: column; align-items: flex-start; gap: 12px; }
+            .confidence-score { text-align: left; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 class="title">Fake News Detection</h1>
+            <p class="subtitle">Analyze news content using multimodal AI</p>
+        </div>
+
+        <div class="card">
+            <h2 class="card-title">Analyze News</h2>
+            <form id="predictionForm">
+                <div class="form-group">
+                    <label for="text" class="label">News Content *</label>
+                    <textarea id="text" class="textarea" placeholder="Enter the news article text you want to analyze..." required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="url" class="label">Source URL (Optional)</label>
+                    <input type="url" id="url" class="input" placeholder="https://example.com/news-article">
+                </div>
+                <div class="form-group">
+                    <label for="image" class="label">Image (Optional)</label>
+                    <input type="file" id="image" class="input" accept="image/*">
+                    <div id="imagePreview" style="margin-top: 10px; display: none;">
+                        <img id="previewImg" style="max-width: 200px; max-height: 200px; border-radius: 8px; border: 1px solid #444444;">
+                    </div>
+                </div>
+                <button type="submit" class="button" id="submitBtn">Analyze</button>
+            </form>
+            <div id="errorMessage" class="error-message"></div>
+        </div>
+
+        <div id="resultCard" class="result-card">
+            <h3 class="result-title">Analysis Result</h3>
+            <div class="prediction-section">
+                <div id="predictionLabel" class="prediction-label"></div>
+                <div class="confidence-score">
+                    <span class="confidence-label">Confidence:</span>
+                    <span id="confidenceValue" class="confidence-value"></span>
+                </div>
+            </div>
+            <div>
+                <h4 class="contributions-title">Modal Contributions</h4>
+                <div id="contributionsContainer"></div>
+            </div>
+            <div class="drift-section">
+                <h4 class="drift-title">Concept Drift Signal</h4>
+                <div class="drift-indicator">
+                    <div id="driftStatus" class="drift-status"></div>
+                    <span id="driftValue" class="drift-value"></span>
+                </div>
+            </div>
+            <button onclick="clearResult()" class="clear-button">Clear Result</button>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:8001/predict/multimodal';
+        
+        // Image preview functionality
+        document.getElementById('image').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            const preview = document.getElementById('imagePreview');
+            const previewImg = document.getElementById('previewImg');
+            
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    previewImg.src = e.target.result;
+                    preview.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            } else {
+                preview.style.display = 'none';
+            }
+        });
+        
+        document.getElementById('predictionForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const text = document.getElementById('text').value.trim();
+            const url = document.getElementById('url').value.trim();
+            const imageFile = document.getElementById('image').files[0];
+            const submitBtn = document.getElementById('submitBtn');
+            const errorMessage = document.getElementById('errorMessage');
+            
+            if (!text) {
+                errorMessage.textContent = 'Please enter news text to analyze';
+                errorMessage.style.display = 'block';
+                return;
+            }
+            
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner"></span> Analyzing...';
+            errorMessage.style.display = 'none';
+            document.getElementById('resultCard').style.display = 'none';
+            
+            try {
+                // Create FormData for multipart upload
+                const formData = new FormData();
+                formData.append('text', text);
+                if (url) formData.append('url', url);
+                if (imageFile) formData.append('image', imageFile);
+                
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || `HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                displayResult(data);
+            } catch (error) {
+                errorMessage.textContent = 'Error: ' + error.message;
+                errorMessage.style.display = 'block';
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Analyze';
+            }
+        });
+
+        function displayResult(data) {
+            const predictionLabel = document.getElementById('predictionLabel');
+            predictionLabel.textContent = data.label === 1 ? 'REAL NEWS' : 'FAKE NEWS';
+            predictionLabel.className = 'prediction-label ' + (data.label === 1 ? 'real' : 'fake');
+            document.getElementById('confidenceValue').textContent = (data.confidence * 100).toFixed(1) + '%';
+            
+            const contributionsContainer = document.getElementById('contributionsContainer');
+            contributionsContainer.innerHTML = '';
+            if (data.modal_contributions) {
+                Object.entries(data.modal_contributions).forEach(([modality, value]) => {
+                    const percentage = (value * 100).toFixed(1);
+                    const item = document.createElement('div');
+                    item.className = 'contribution-item';
+                    item.innerHTML = `<span class="modality-name">${modality.charAt(0).toUpperCase() + modality.slice(1)}</span><div class="contribution-bar"><div class="contribution-fill" style="width: ${percentage}%"></div></div><span class="contribution-value">${percentage}%</span>`;
+                    contributionsContainer.appendChild(item);
+                });
+            }
+            
+            const driftPercent = (data.drift_signal * 100).toFixed(1);
+            document.getElementById('driftValue').textContent = driftPercent + '%';
+            let driftClass = 'low', driftText = 'Low';
+            if (data.drift_signal > 0.3) { driftClass = 'high'; driftText = 'High'; }
+            else if (data.drift_signal > 0.1) { driftClass = 'medium'; driftText = 'Medium'; }
+            const driftStatus = document.getElementById('driftStatus');
+            driftStatus.className = 'drift-status ' + driftClass;
+            driftStatus.innerHTML = `<span class="drift-dot"></span>${driftText}`;
+            
+            document.getElementById('resultCard').style.display = 'block';
+            document.getElementById('resultCard').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function clearResult() {
+            document.getElementById('resultCard').style.display = 'none';
+            document.getElementById('text').value = '';
+            document.getElementById('url').value = '';
+            document.getElementById('image').value = '';
+            document.getElementById('imagePreview').style.display = 'none';
+            document.getElementById('errorMessage').style.display = 'none';
+        }
+    </script>
+</body>
+</html>

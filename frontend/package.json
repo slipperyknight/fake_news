@@ -1,0 +1,15 @@
+{
+  "name": "fake-news-detection-frontend",
+  "version": "1.0.0",
+  "description": "Modern React frontend for fake news detection system",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx serve -p 3000"
+  },
+  "dependencies": {
+    "serve": "^14.2.1"
+  },
+  "keywords": ["react", "frontend", "fake-news", "detection"],
+  "author": "Production Team",
+  "license": "MIT"
+}

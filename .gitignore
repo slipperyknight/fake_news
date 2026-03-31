@@ -1,6 +1,72 @@
-venv/ 
-__pycache__/ 
-*.pyc 
-*.pyo 
-*.pyd 
-.env 
+# Python
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.env
+*.egg-info/
+dist/
+build/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+logs/
+*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test files
+test_*.py
+*_test.py
+comprehensive_system_test.py
+final_*.py
+quick_test.py
+simple_api_test.py
+validate_*.py
+debug_*.py
+
+# Temporary files
+uploads/
+temp/
+tmp/
+catboost_info/
+
+# Node modules
+node_modules/
+frontend/node_modules/
+
+# Build outputs
+frontend/build/
+frontend/dist/
+
+# Documentation (keep essential ones)
+SYSTEM_STATUS_REPORT.md
+SAMPLE_TEST_INPUTS.md
+DATABASE_AUTO_LABEL_UPDATES.md
+FASTAPI_REFACTORING_COMPLETE.md
+IMAGE_UPLOAD_FEATURE.md
+PREMIUM_UI_COMPLETE.md
+DOCKER_DEPLOYMENT_COMPLETE.md
+
+# Kiro
+.kiro/
+
+# Large model files (download separately)
+models/image_model/*.pth
+models/meta_model/*.cbm
+models/meta_model/*.pkl
+models/text_model/*.safetensors
+models/text_model/*.bin
